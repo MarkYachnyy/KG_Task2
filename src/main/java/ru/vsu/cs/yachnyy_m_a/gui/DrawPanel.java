@@ -21,16 +21,16 @@ public class DrawPanel extends JPanel {
 
     private int selected_point = -1;
 
-    private Consumer<Color> selectPointCallback;
+    private Consumer<Color> throwColorCallback;
 
-    public DrawPanel(Consumer<Color> pointSelected) {
+    public DrawPanel(Consumer<Color> throwColorCallback) {
         this.addComponentListener(sizeChangeListener);
         this.addMouseListener(mouseAdapter);
         this.addMouseMotionListener(mouseMotionListener);
-        this.selectPointCallback = pointSelected;
+        this.throwColorCallback = throwColorCallback;
         points = new ArrayList<>();
         point_colors = new HashMap<>();
-        addPoint(1, 1, Color.RED);
+        addPoint(20, 20, Color.RED);
         addPoint(400, 250, Color.GREEN);
         addPoint(200, 400, Color.BLUE);
     }
@@ -63,66 +63,16 @@ public class DrawPanel extends JPanel {
         super.paintComponent(g);
         if (canvas != null && this.getWidth() > 0 && this.getHeight() > 0) {
             fillCanvas(Color.WHITE);
+            if(selected_point >= 0){
+                Rasterization.fillCircle(restrictedPixelWriter, points.get(selected_point).x, points.get(selected_point).y, PROXIMITY, Color.CYAN);
+            }
             drawTheTriangle();
+            for (Point point: points){
+                Rasterization.fillCircle(restrictedPixelWriter, point.x, point.y, 2, Color.BLACK);
+            }
             ((Graphics2D) g).drawImage(canvas, null, null);
         }
     }
-
-
-    private PixelWriter canvasPixelWriter = new PixelWriter() {
-        @Override
-        public void setRGB(int x, int y, Color color) {
-            canvas.setRGB(x, y, color.getRGB());
-        }
-    };
-
-    private ComponentAdapter sizeChangeListener = new ComponentAdapter() {
-        @Override
-        public void componentResized(ComponentEvent e) {
-            canvas = new BufferedImage(DrawPanel.this.getWidth(), DrawPanel.this.getHeight(), BufferedImage.TYPE_INT_RGB);
-            fillCanvas(Color.WHITE);
-            drawTheTriangle();
-        }
-    };
-
-    private MouseAdapter mouseAdapter = new MouseAdapter() {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            int id = getPointAt(e.getX(), e.getY());
-            selected_point = id;
-            if (id >= 0) {
-                selectPointCallback.accept(point_colors.get(id));
-            } else {
-                selectPointCallback.accept(null);
-            }
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            selected_point = getPointAt(e.getX(), e.getY());
-            selectPointCallback.accept(null);
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            selected_point = -1;
-            selectPointCallback.accept(null);
-        }
-    };
-
-    private MouseMotionListener mouseMotionListener = new MouseMotionAdapter() {
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            if (selected_point >= 0) {
-                fillCanvas(Color.WHITE);
-                int new_x = e.getX();
-                int new_y = e.getY();
-                if (new_x < canvas.getWidth() && new_x > 0) points.get(selected_point).x = e.getX();
-                if (new_y < canvas.getHeight() && new_y > 0) points.get(selected_point).y = e.getY();
-                DrawPanel.this.repaint();
-            }
-        }
-    };
 
     private void fillCanvas(Color c) {
         int color = c.getRGB();
@@ -142,4 +92,74 @@ public class DrawPanel extends JPanel {
         int y3 = points.get(2).y;
         Rasterization.fillTriangle(canvasPixelWriter, x1, y1, x2, y2, x3, y3, point_colors.get(0), point_colors.get(1), point_colors.get(2));
     }
+
+    private PixelWriter canvasPixelWriter = new PixelWriter() {
+        @Override
+        public void setRGB(int x, int y, Color color) {
+            canvas.setRGB(x, y, color.getRGB());
+        }
+    };
+
+    private PixelWriter restrictedPixelWriter = new PixelWriter() {
+        @Override
+        public void setRGB(int x, int y, Color color) {
+            if(x >= 0 && x < canvas.getWidth() && y >= 0 && y < canvas.getHeight()){
+                canvas.setRGB(x, y, color.getRGB());
+            }
+        }
+    };
+
+    private ComponentAdapter sizeChangeListener = new ComponentAdapter() {
+        @Override
+        public void componentResized(ComponentEvent e) {
+            for (Point p: points){
+                if(p.x >= DrawPanel.this.getWidth()){
+                    p.x = DrawPanel.this.getWidth() - 1;
+                }
+                if(p.y >= DrawPanel.this.getHeight()) p.y = DrawPanel.this.getHeight() - 1;
+            }
+            canvas = new BufferedImage(DrawPanel.this.getWidth(), DrawPanel.this.getHeight(), BufferedImage.TYPE_INT_RGB);
+        }
+    };
+
+    private MouseAdapter mouseAdapter = new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            int id = getPointAt(e.getX(), e.getY());
+            selected_point = id;
+            if (id >= 0) {
+                throwColorCallback.accept(point_colors.get(id));
+            } else {
+                throwColorCallback.accept(null);
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            selected_point = getPointAt(e.getX(), e.getY());
+            throwColorCallback.accept(null);
+            repaint();
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            selected_point = -1;
+            throwColorCallback.accept(null);
+            repaint();
+        }
+    };
+
+    private MouseMotionListener mouseMotionListener = new MouseMotionAdapter() {
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (selected_point >= 0) {
+                fillCanvas(Color.WHITE);
+                int new_x = e.getX();
+                int new_y = e.getY();
+                if (new_x < canvas.getWidth() && new_x > 0) points.get(selected_point).x = e.getX();
+                if (new_y < canvas.getHeight() && new_y > 0) points.get(selected_point).y = e.getY();
+                DrawPanel.this.repaint();
+            }
+        }
+    };
 }

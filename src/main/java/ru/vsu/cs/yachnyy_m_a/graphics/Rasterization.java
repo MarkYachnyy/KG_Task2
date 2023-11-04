@@ -48,18 +48,6 @@ public class Rasterization {
             color2 = ct;
         }
 
-        int r1 = color1.getRed();
-        int r2 = color2.getRed();
-        int r3 = color3.getRed();
-
-        int g1 = color1.getGreen();
-        int g2 = color2.getGreen();
-        int g3 = color3.getGreen();
-
-        int b1 = color1.getBlue();
-        int b2 = color2.getBlue();
-        int b3 = color3.getBlue();
-
         int dxL, dyL, dxR, dyR, yL, yR, xL, xR;
         int dxL_sign, dxR_sign;
         boolean steepL, steepR;
@@ -249,7 +237,6 @@ public class Rasterization {
 
         //ОБРАБОТКА ИТЕРАЦИИ ПОСЛЕДНЕЙ ПОЛОВИНЫ
 
-
         if (!steepL)
             drawLineWithInterpolation(pixelWriter, x3, xL, color3, colorL, x3, y3, Math.abs(xcL - x3) + 1, -dxL_sign);
 
@@ -316,20 +303,38 @@ public class Rasterization {
         fillTriangle(pixelWriter, x1, y1, x2, y2, x3, y3, color, color, color);
     }
 
-    private static double[] bar_cor(int x1, int y1, int x2, int y2, int x3, int y3, int x, int y) {
-        int s1 = Math.abs(x2 * y3 + x * y2 + y * x3 - y * x2 - y2 * x3 - x * y3);
-        int s2 = Math.abs(x * y3 + x1 * y + y1 * x3 - x * y1 - y * x3 - x1 * y3);
-        int s3 = Math.abs(x2 * y + x1 * y2 + x * y1 - x2 * y1 - x * y2 - x1 * y);
-        int s = Math.abs(x1 * y2 + x2 * y3 + x3 * y1 - x2 * y1 - x3 * y2 - x1 * y3);
-
-        return new double[]{1.0 * s1 / s, 1.0 * s2 / s, 1.0 * s3 / s};
-    }
-
-    private static void fillRect(PixelWriter pixelWriter, int x, int y, int width, int height, Color color) {
+    public static void fillRect(PixelWriter pixelWriter, int x, int y, int width, int height, Color color) {
         for (int x0 = x; x0 < x + width; x0++) {
             for (int y0 = y; y0 < y + height; y0++) {
                 pixelWriter.setRGB(x0, y0, color);
             }
         }
+    }
+
+    public static void fillCircle(PixelWriter pixelWriter, int xc, int yc, int radius, Color color) {
+        int y0 = radius;
+        int x0 = 0;
+        for(int y = y0; y >= x0; y--){
+            draw8CirclePixels(pixelWriter, xc, yc, x0, y, color);
+        }
+        while (x0 <= y0) {
+            x0++;
+            if (x0 * x0 + (y0 - 0.5) * (y0 - 0.5) - radius * radius > 0) y0--;
+            for(int y = y0; y >= x0; y--){
+                draw8CirclePixels(pixelWriter, xc, yc, x0, y, color);
+            }
+            draw8CirclePixels(pixelWriter, xc, yc, x0, y0, color);
+        }
+    }
+
+    private static void draw8CirclePixels(PixelWriter pixelWriter, int xc, int yc, int x0, int y0, Color color) {
+        pixelWriter.setRGB(xc + x0, yc + y0, color);
+        pixelWriter.setRGB(xc - x0, yc + y0, color);
+        pixelWriter.setRGB(xc + x0, yc - y0, color);
+        pixelWriter.setRGB(xc - x0, yc - y0, color);
+        pixelWriter.setRGB(xc + y0, yc + x0, color);
+        pixelWriter.setRGB(xc - y0, yc + x0, color);
+        pixelWriter.setRGB(xc + y0, yc - x0, color);
+        pixelWriter.setRGB(xc - y0, yc - x0, color);
     }
 }
