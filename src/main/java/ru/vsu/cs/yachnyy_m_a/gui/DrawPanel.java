@@ -22,12 +22,14 @@ public class DrawPanel extends JPanel {
     private int selected_point = -1;
 
     private Consumer<Color> throwColorCallback;
+    private Consumer<Point> throwPointCallback;
 
-    public DrawPanel(Consumer<Color> throwColorCallback) {
+    public DrawPanel(Consumer<Color> throwColorCallback, Consumer<Point> throwPointCallback) {
         this.addComponentListener(sizeChangeListener);
         this.addMouseListener(mouseAdapter);
         this.addMouseMotionListener(mouseMotionListener);
         this.throwColorCallback = throwColorCallback;
+        this.throwPointCallback = throwPointCallback;
         points = new ArrayList<>();
         point_colors = new HashMap<>();
         addPoint(20, 20, Color.RED);
@@ -54,6 +56,26 @@ public class DrawPanel extends JPanel {
     public void acceptColor(Color color) {
         if (selected_point >= 0) {
             point_colors.put(selected_point, color);
+            repaint();
+        }
+    }
+
+    public void acceptPoint(Point point){
+        if(selected_point >= 0){
+            if(point.x >= canvas.getWidth()){
+                point.x = canvas.getWidth() - 1;
+            }
+            if(point.x < 0){
+                point.x = 0;
+            }
+            if(point.y >= canvas.getHeight()){
+                point.y = canvas.getHeight() - 1;
+            }
+            if(point.y < 0){
+                point.y = 0;
+            }
+            throwPointCallback.accept(point);
+            points.set(selected_point, point);
             repaint();
         }
     }
@@ -112,11 +134,15 @@ public class DrawPanel extends JPanel {
     private ComponentAdapter sizeChangeListener = new ComponentAdapter() {
         @Override
         public void componentResized(ComponentEvent e) {
-            for (Point p: points){
+            for (int i = 0; i < points.size(); i++){
+                Point p = points.get(i);
                 if(p.x >= DrawPanel.this.getWidth()){
                     p.x = DrawPanel.this.getWidth() - 1;
                 }
-                if(p.y >= DrawPanel.this.getHeight()) p.y = DrawPanel.this.getHeight() - 1;
+                if(p.y >= DrawPanel.this.getHeight()) {
+                    p.y = DrawPanel.this.getHeight() - 1;
+                }
+                if(i == selected_point) throwPointCallback.accept(p);
             }
             canvas = new BufferedImage(DrawPanel.this.getWidth(), DrawPanel.this.getHeight(), BufferedImage.TYPE_INT_RGB);
         }
@@ -129,8 +155,10 @@ public class DrawPanel extends JPanel {
             selected_point = id;
             if (id >= 0) {
                 throwColorCallback.accept(point_colors.get(id));
+                throwPointCallback.accept(points.get(id));
             } else {
                 throwColorCallback.accept(null);
+                throwPointCallback.accept(null);
             }
         }
 
@@ -138,13 +166,14 @@ public class DrawPanel extends JPanel {
         public void mousePressed(MouseEvent e) {
             selected_point = getPointAt(e.getX(), e.getY());
             throwColorCallback.accept(null);
+            throwPointCallback.accept(null);
             repaint();
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
             selected_point = -1;
-            throwColorCallback.accept(null);
+            //throwColorCallback.accept(null);
             repaint();
         }
     };

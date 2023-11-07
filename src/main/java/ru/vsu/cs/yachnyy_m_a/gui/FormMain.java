@@ -15,8 +15,10 @@ public class FormMain extends JFrame {
     private JLabel LabelRed;
     private JLabel LabelGreen;
     private JLabel LabelBlue;
+    private JSpinner SpinnerX;
+    private JSpinner SpinnerY;
 
-    public FormMain(){
+    public FormMain() {
         this.setTitle("Task2");
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setContentPane(PanelMain);
@@ -30,7 +32,7 @@ public class FormMain extends JFrame {
         SliderBlue.setMinimum(0);
         SliderBlue.setMaximum(255);
         Consumer<Color> colorConsumer = color -> {
-            if(color == null){
+            if (color == null) {
                 LabelRed.setText("---");
                 LabelGreen.setText("---");
                 LabelBlue.setText("---");
@@ -49,21 +51,36 @@ public class FormMain extends JFrame {
                 LabelBlue.setText(String.valueOf(SliderBlue.getValue()));
             }
         };
-        DrawPanel drawPanel = new DrawPanel(colorConsumer);
-        DrawPanelContainer.add(drawPanel);
-        colorConsumer.accept(null);
-        ChangeListener LabelChangeListener = new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                LabelRed.setText(String.valueOf(SliderRed.getValue()));
-                LabelGreen.setText(String.valueOf(SliderGreen.getValue()));
-                LabelBlue.setText(String.valueOf(SliderBlue.getValue()));
-                drawPanel.acceptColor(new Color(SliderRed.getValue(), SliderGreen.getValue(), SliderBlue.getValue()));
+        Consumer<Point> pointConsumer = point -> {
+            if (point == null) {
+                SpinnerX.setEnabled(false);
+                SpinnerY.setEnabled(false);
+            } else {
+                SpinnerX.setEnabled(true);
+                SpinnerY.setEnabled(true);
+                SpinnerX.setValue(point.x);
+                SpinnerY.setValue(point.y);
             }
         };
-        SliderRed.addChangeListener(LabelChangeListener);
-        SliderGreen.addChangeListener(LabelChangeListener);
-        SliderBlue.addChangeListener(LabelChangeListener);
+        DrawPanel drawPanel = new DrawPanel(colorConsumer, pointConsumer);
+        DrawPanelContainer.add(drawPanel);
+        colorConsumer.accept(null);
+        pointConsumer.accept(null);
+        ChangeListener SliderChangeListener = e -> {
+            LabelRed.setText(String.valueOf(SliderRed.getValue()));
+            LabelGreen.setText(String.valueOf(SliderGreen.getValue()));
+            LabelBlue.setText(String.valueOf(SliderBlue.getValue()));
+            drawPanel.acceptColor(new Color(SliderRed.getValue(), SliderGreen.getValue(), SliderBlue.getValue()));
+        };
+
+        ChangeListener SpinnerChangeListener = e -> {
+            drawPanel.acceptPoint(new Point((Integer) SpinnerX.getValue(), (Integer) SpinnerY.getValue()));
+        };
+        SliderRed.addChangeListener(SliderChangeListener);
+        SliderGreen.addChangeListener(SliderChangeListener);
+        SliderBlue.addChangeListener(SliderChangeListener);
+        SpinnerX.addChangeListener(SpinnerChangeListener);
+        SpinnerY.addChangeListener(SpinnerChangeListener);
 
         this.pack();
     }

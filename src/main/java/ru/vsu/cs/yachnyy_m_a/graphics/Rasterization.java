@@ -249,14 +249,10 @@ public class Rasterization {
         int x0 = xc;
         int dx = x2 - x1;
         for (int i = 0; i < l; i++) {
-            try {
-                Color color = new Color(color1.getRed() * (x2 - x0) / dx + color2.getRed() * (x0 - x1) / dx,
-                        color1.getGreen() * (x2 - x0) / dx + color2.getGreen() * (x0 - x1) / dx,
-                        color1.getBlue() * (x2 - x0) / dx + color2.getBlue() * (x0 - x1) / dx);
-                pixelWriter.setRGB(x0, yc, color);
-            } catch (Exception e) {
-                fillRect(pixelWriter, x0 - 1, yc - 1, 3, 3, Color.RED);
-            }
+            Color color = new Color(color1.getRed() * (x2 - x0) / dx + color2.getRed() * (x0 - x1) / dx,
+                    color1.getGreen() * (x2 - x0) / dx + color2.getGreen() * (x0 - x1) / dx,
+                    color1.getBlue() * (x2 - x0) / dx + color2.getBlue() * (x0 - x1) / dx);
+            pixelWriter.setRGB(x0, yc, color);
             x0 += sign;
         }
     }
@@ -264,7 +260,7 @@ public class Rasterization {
     private static void drawLineWithInterpolation(PixelWriter pixelWriter, int x1, int x2, int x3, int y1, int y2, int y3, Color color1, Color color2, Color color3, int yc, int from, int to) {
 
         int s = x2 * y3 + x3 * y1 + x1 * y2 - y1 * x2 - y2 * x3 - x1 * y3;
-        if (s == 0) return;
+        //if (s == 0) return;
 
         int r1 = color1.getRed();
         int r2 = color2.getRed();
@@ -290,12 +286,11 @@ public class Rasterization {
             int b = b1 * s1 / s + b2 * s2 / s + b3 * s3 / s;
             Color color;
 
-            try {
-                color = new Color(r, g, b);
-                pixelWriter.setRGB(x0, yc, color);
-            } catch (Exception e) {
-                fillRect(pixelWriter, x0 - 1, yc - 1, 3, 3, Color.MAGENTA);
-            }
+            color = new Color(r, g, b);
+            pixelWriter.setRGB(x0, yc, color);
+//            } catch (Exception e) {
+//                fillRect(pixelWriter, x0 - 5, yc - 5, 10, 10, Color.MAGENTA);
+//            }
         }
     }
 
