@@ -182,7 +182,6 @@ public class DrawPanel extends JPanel {
         @Override
         public void mouseDragged(MouseEvent e) {
             if (selected_point >= 0) {
-                fillCanvas(Color.WHITE);
                 int new_x = e.getX();
                 int new_y = e.getY();
                 if (new_x < canvas.getWidth() && new_x > 0) points.get(selected_point).x = e.getX();
