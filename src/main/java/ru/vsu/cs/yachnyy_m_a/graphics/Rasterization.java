@@ -247,21 +247,30 @@ public class Rasterization {
 
     private static void drawLineWithInterpolation(PixelWriter pixelWriter, int x1, int x2, Color color1, Color color2, int xc, int yc, int l, int sign) {
         int x0 = xc;
+        int x01 = x2 - xc;
+        int x02 = xc - x1;
         int dx = x2 - x1;
+        int r1 = color1.getRed();
+        int g1 = color1.getGreen();
+        int b1 = color1.getBlue();
+        int r2 = color2.getRed();
+        int g2 = color2.getGreen();
+        int b2 = color2.getBlue();
         for (int i = 0; i < l; i++) {
-            Color color = new Color(color1.getRed() * (x2 - x0) / dx + color2.getRed() * (x0 - x1) / dx,
-                    color1.getGreen() * (x2 - x0) / dx + color2.getGreen() * (x0 - x1) / dx,
-                    color1.getBlue() * (x2 - x0) / dx + color2.getBlue() * (x0 - x1) / dx);
+            Color color = new Color(r1 * x01 / dx + r2 * x02 / dx,
+                    g1 * x01 / dx + g2 * x02 / dx,
+                    b1 * x01 / dx + b2 * x02 / dx);
+            
             pixelWriter.setRGB(x0, yc, color);
             x0 += sign;
+            x1 -= sign;
+            x2 += sign;
         }
     }
 
     private static void drawLineWithInterpolation(PixelWriter pixelWriter, int x1, int x2, int x3, int y1, int y2, int y3, Color color1, Color color2, Color color3, int yc, int from, int to) {
 
         int s = x2 * y3 + x3 * y1 + x1 * y2 - y1 * x2 - y2 * x3 - x1 * y3;
-        //if (s == 0) return;
-
         int r1 = color1.getRed();
         int r2 = color2.getRed();
         int r3 = color3.getRed();
@@ -274,13 +283,11 @@ public class Rasterization {
         int b2 = color2.getBlue();
         int b3 = color3.getBlue();
 
+        int s1 = x2 * y3 + from * y2 + yc * x3 - yc * x2 - y2 * x3 - from * y3;
+        int s2 = from * y3 + x1 * yc + y1 * x3 - from * y1 - yc * x3 - x1 * y3;
+        int s3 = x2 * yc + x1 * y2 + from * y1 - x2 * y1 - from * y2 - x1 * yc;
+
         for (int x0 = from; x0 <= to; x0++) {
-
-            int s1 = x2 * y3 + x0 * y2 + yc * x3 - yc * x2 - y2 * x3 - x0 * y3;
-            int s2 = x0 * y3 + x1 * yc + y1 * x3 - x0 * y1 - yc * x3 - x1 * y3;
-            int s3 = x2 * yc + x1 * y2 + x0 * y1 - x2 * y1 - x0 * y2 - x1 * yc;
-
-
             int r = r1 * s1 / s + r2 * s2 / s + r3 * s3 / s;
             int g = g1 * s1 / s + g2 * s2 / s + g3 * s3 / s;
             int b = b1 * s1 / s + b2 * s2 / s + b3 * s3 / s;
@@ -288,9 +295,10 @@ public class Rasterization {
 
             color = new Color(r, g, b);
             pixelWriter.setRGB(x0, yc, color);
-//            } catch (Exception e) {
-//                fillRect(pixelWriter, x0 - 5, yc - 5, 10, 10, Color.MAGENTA);
-//            }
+
+            s1 += y2 - y3;
+            s2 += y3 - y1;
+            s3 += y1 - y2;
         }
     }
 
