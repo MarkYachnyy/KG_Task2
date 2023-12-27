@@ -263,8 +263,8 @@ public class Rasterization {
             
             pixelWriter.setRGB(x0, yc, color);
             x0 += sign;
-            x1 -= sign;
-            x2 += sign;
+            x01 -= sign;
+            x02 += sign;
         }
     }
 
@@ -287,6 +287,10 @@ public class Rasterization {
         int s2 = from * y3 + x1 * yc + y1 * x3 - from * y1 - yc * x3 - x1 * y3;
         int s3 = x2 * yc + x1 * y2 + from * y1 - x2 * y1 - from * y2 - x1 * yc;
 
+        int ds1 = y2 - y3;
+        int ds2 = y3 - y1;
+        int ds3 = y1 - y2;
+
         for (int x0 = from; x0 <= to; x0++) {
             int r = r1 * s1 / s + r2 * s2 / s + r3 * s3 / s;
             int g = g1 * s1 / s + g2 * s2 / s + g3 * s3 / s;
@@ -296,9 +300,9 @@ public class Rasterization {
             color = new Color(r, g, b);
             pixelWriter.setRGB(x0, yc, color);
 
-            s1 += y2 - y3;
-            s2 += y3 - y1;
-            s3 += y1 - y2;
+            s1 += ds1;
+            s2 += ds2;
+            s3 += ds3;
         }
     }
 

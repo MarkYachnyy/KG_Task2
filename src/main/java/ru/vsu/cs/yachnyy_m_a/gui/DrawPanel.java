@@ -145,6 +145,7 @@ public class DrawPanel extends JPanel {
                 if(i == selected_point) throwPointCallback.accept(p);
             }
             canvas = new BufferedImage(DrawPanel.this.getWidth(), DrawPanel.this.getHeight(), BufferedImage.TYPE_INT_RGB);
+            repaint();
         }
     };
 
